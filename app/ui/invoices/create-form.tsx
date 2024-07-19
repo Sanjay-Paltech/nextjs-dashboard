@@ -13,7 +13,7 @@ import { createInvoice, State } from '@/app/lib/actions';
 import { useActionState } from 'react';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
-  const initialState : State = {message: null, errors: {}}
+  const initialState : State  = {errors: {}, message: null}
 
   const [state,formaction] = useActionState(createInvoice,initialState)
   console.log(state);
@@ -47,8 +47,8 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
           <div id='customer-error'>
-            {state?.errors?.customer_id &&
-              state.errors.customer_id.map((error : string)=>(
+            {state?.errors?.customerId &&
+              state.errors.customerId.map((error : string)=>(
                 <p key={error} className='text-red-500 text-sm mt-2'>{error}</p>
               ))}
           </div>

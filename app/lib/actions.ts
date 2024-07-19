@@ -9,7 +9,7 @@ import { AuthError } from 'next-auth';
 
 const FormSchema = z.object({
     id: z.string(),
-    customer_id: z.string({
+    customerId: z.string({
         invalid_type_error : 'Please select a customer.'
     }),
     amount: z.coerce.number().gt(0,{message : 'Please enter an amount grater than $0.'}),
@@ -31,9 +31,9 @@ export type State = {
 const CreateInvoice = FormSchema.omit({id:true, date:true});
 const UpdateInvoice = FormSchema.omit({id:true, date:true});
 
-export async function createInvoice(prevState : State,formData : FormData) {
+export async function createInvoice(prevState: State, formData : FormData) : Promise<State> {
     const validatedFeilds = CreateInvoice.safeParse({
-        customer_id: formData.get('customer_id'),
+        customerId: formData.get('customer_id'),
         amount:  formData.get('amount'),
         status: formData.get('status')
     });
@@ -46,20 +46,21 @@ export async function createInvoice(prevState : State,formData : FormData) {
         };
     }
 
-    const {customer_id,amount,status} = validatedFeilds.data
+    const {customerId,amount,status} = validatedFeilds.data
     
     const amountCents = amount*100;
     const date = new Date().toISOString().split('T')[0];
     try{
         await sql`
             INSERT INTO invoices (customer_id,amount,status,date)
-            VALUES (${customer_id}, ${amountCents}, ${status}, ${date})
+            VALUES (${customerId}, ${amountCents}, ${status}, ${date})
             `;
         }
     catch(err){
         console.log(err);
         return {
-            message: 'Database Error: Failed to Create Invoice'+ err
+            message: 'Database Error: Failed to Create Invoice',
+            errors: {}
         }
 
     }
@@ -67,9 +68,9 @@ export async function createInvoice(prevState : State,formData : FormData) {
     redirect('/dashboard/invoices');
 }
 
-export async function updateInvoice(id : string, prevState: State, formData: FormData) {
+export async function updateInvoice(prevState: State, formData: FormData, id : string) {
     const validatedFeilds = UpdateInvoice.safeParse({
-        customer_id: formData.get('customer_id'),
+        customerId: formData.get('customer_id'),
         amount:  formData.get('amount'),
         status: formData.get('status')
     });
@@ -81,13 +82,13 @@ export async function updateInvoice(id : string, prevState: State, formData: For
         };
     }
 
-    const {customer_id,amount,status} = validatedFeilds.data
+    const {customerId,amount,status} = validatedFeilds.data
 
     const amountCents = amount*100;
     try{
         await sql`
             UPDATE invoices SET
-                customer_id = ${customer_id}
+                customer_id = ${customerId}
                 amount = ${amountCents}, 
                 status = ${status}
             WHERE id = ${id}
@@ -95,7 +96,10 @@ export async function updateInvoice(id : string, prevState: State, formData: For
         }
     catch(err){
         console.log(err);
-        return 'Database Error: Failed to update invoice'+ err;
+        return {
+            message: 'Database Error: Failed to update invoice'+ err,
+            errors: {}
+        }
     }
     revalidatePath('/dashboard/invoices');
     redirect('/dashboard/invoices');
