@@ -3,7 +3,6 @@ import { sql } from '@vercel/postgres';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import {z} from 'zod';
-import { User } from './definitions';
 import { signIn } from '../../auth';
 import { AuthError } from 'next-auth';
 
@@ -106,7 +105,6 @@ export async function updateInvoice(prevState: State, formData: FormData, id : s
 }
 
 export async function deleteInvoice(id: string) {
-    // return new Error();
     try{
         await sql`DELETE FROM invoices WHERE id = ${id};`
     }
